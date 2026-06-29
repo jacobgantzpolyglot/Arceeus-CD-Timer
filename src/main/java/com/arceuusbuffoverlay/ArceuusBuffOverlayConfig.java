@@ -72,4 +72,15 @@ public interface ArceuusBuffOverlayConfig extends Config
     {
         return true;
     }
+    @ConfigItem(
+        keyName = "highlightGreaterCorruptionReady",
+        name = "Highlight Greater Corruption ready",
+        description = "When enabled, Greater Corruption turns red in combat when it is ready to cast again. Default is off."
+    )
+    default boolean highlightGreaterCorruptionReady()
+    {
+        return false;
+    }
+
 }
+

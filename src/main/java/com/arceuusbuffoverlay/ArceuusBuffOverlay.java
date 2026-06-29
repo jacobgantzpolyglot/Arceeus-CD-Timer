@@ -154,13 +154,25 @@ public class ArceuusBuffOverlay extends Overlay
 
         // Greater Corruption:
         // - On cooldown / cannot be cast: dark blue overlay
-        // - Ready while in combat: red highlight
-        if (spell == TrackedSpell.GREATER_CORRUPTION && plugin.isOnCooldown(spell))
+        // - Ready while in combat: red only if the setting is enabled
+        if (spell == TrackedSpell.GREATER_CORRUPTION)
         {
-            renderCooldown(graphics, bounds);
+            if (plugin.isOnCooldown(spell))
+            {
+                renderCooldown(graphics, bounds);
+                return;
+            }
+
+            if (inCombat && config.highlightGreaterCorruptionReady())
+            {
+                renderMissing(graphics, bounds);
+            }
+
             return;
         }
 
+        // Death Charge / Mark of Darkness:
+        // expired or not active while still in combat = red
         if (inCombat)
         {
             renderMissing(graphics, bounds);

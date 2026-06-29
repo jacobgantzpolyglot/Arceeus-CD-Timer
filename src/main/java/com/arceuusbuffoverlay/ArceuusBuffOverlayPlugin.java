@@ -9,6 +9,7 @@ import net.runelite.api.GameState;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
+import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
@@ -77,7 +78,7 @@ public class ArceuusBuffOverlayPlugin extends Plugin
         }
 
         Player local = client.getLocalPlayer();
-        if (local != null && local.getInteracting() != null)
+        if (local != null && isCombatDetected(local))
         {
             lastCombatTick = client.getTickCount();
         }
@@ -98,7 +99,13 @@ public class ArceuusBuffOverlayPlugin extends Plugin
         // OSRS sends this message. Keep the spell blue instead of red.
         if (message.contains("can only cast corruption spells"))
         {
-            startTimer(TrackedSpell.GREATER_CORRUPTION);
+            if (!isOnCooldown(TrackedSpell.GREATER_CORRUPTION))
+            {
+                expirationTicks.put(
+                    TrackedSpell.GREATER_CORRUPTION,
+                    client.getTickCount() + secondsToTicks(3)
+                );
+            }
             return;
         }
 
@@ -143,7 +150,10 @@ public class ArceuusBuffOverlayPlugin extends Plugin
 
             if (isTargetAction(action))
             {
-                startTimer(TrackedSpell.GREATER_CORRUPTION);
+                if (!isOnCooldown(TrackedSpell.GREATER_CORRUPTION))
+                {
+                    startTimer(TrackedSpell.GREATER_CORRUPTION);
+                }
                 selectedTargetSpell = null;
             }
 
@@ -159,9 +169,33 @@ public class ArceuusBuffOverlayPlugin extends Plugin
 
         if (selectedTargetSpell != null && isTargetAction(action))
         {
-            startTimer(selectedTargetSpell);
+            if (!isOnCooldown(selectedTargetSpell))
+            {
+                startTimer(selectedTargetSpell);
+            }
             selectedTargetSpell = null;
         }
+    }
+
+    private boolean isCombatDetected(Player local)
+    {
+        if (local.getInteracting() != null)
+        {
+            return true;
+        }
+
+        // Some combat situations drop your local interacting target between attacks.
+        // This catches mobs that are still targeting you, so expired Death Charge /
+        // Mark of Darkness can turn red while you are still on the same fight.
+        for (NPC npc : client.getNpcs())
+        {
+            if (npc != null && npc.getInteracting() == local)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     boolean isInCombat()
