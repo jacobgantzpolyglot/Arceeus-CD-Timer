@@ -128,18 +128,17 @@ public class ArceuusBuffOverlay extends Overlay
 
     private boolean isInBottomRightPanel(Rectangle bounds)
     {
-        if (client.getCanvas() == null)
+        Dimension realDimensions = client.getRealDimensions();
+        if (realDimensions == null)
         {
             return false;
         }
 
-        int canvasWidth = client.getCanvas().getWidth();
-        int canvasHeight = client.getCanvas().getHeight();
-
-        // Only allow widgets in the lower-right interface area where the spellbook sits.
-        // This prevents matching chatbox lines like "You have placed a Mark of Darkness upon yourself."
-        int minX = canvasWidth - 260;
-        int minY = canvasHeight - 360;
+        // Widget bounds are based on the real client dimensions.
+        // Stretched Mode can make the canvas larger, so using canvas width/height here
+        // can incorrectly reject the spellbook widgets.
+        int minX = realDimensions.width - 260;
+        int minY = realDimensions.height - 360;
 
         return bounds.x >= minX && bounds.y >= minY;
     }
